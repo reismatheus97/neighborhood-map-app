@@ -127,15 +127,30 @@
                     <div class="locations-container">
                         <div data-bind="ifnot: hasFilter">
                             <div data-bind="foreach: markers">
-                                <li class="mdc-list-item my-list-item" data-bind="text: place_name" data-ssss="sss"></li>
-
+                                <li class="mdc-list-item my-list-item" 
+                                    data-bind="text: place_name, attr: {'data-center': center}"
+                                    onclick="centerOnThisMarker(event)"
+                                ></li>
                             </div>
                         </div>
                         <div data-bind="if: hasFilter">
                             <div data-bind="foreach: filteredElements">
-                                <li class="mdc-list-item my-list-item" data-bind="text: place_name"></li>
+                                <li class="mdc-list-item my-list-item" 
+                                    data-bind="text: place_name, attr: {'data-center': center}"
+                                    onclick="centerOnThisMarker(event)"
+                                ></li>
                             </div>
                         </div>
+                        <script>
+                            function centerOnThisMarker(e) {
+                                if (map) 
+                                    map.flyTo({
+                                        center: e.target
+                                                .getAttribute("data-center")
+                                                .split(",")
+                                    })
+                            }
+                        </script>
                     </div>
                     <div class="mdc-tab-bar" role="tablist">
                         <div class="mdc-tab-scroller">
