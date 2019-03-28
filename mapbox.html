@@ -87,6 +87,7 @@
             margin: 8px;
             padding: 8px;
             flex-grow: 1;
+            overflow-y: auto;
         }
 
         .my-div {
@@ -127,27 +128,21 @@
                     <div class="locations-container">
                         <div data-bind="ifnot: hasFilter">
                             <div data-bind="foreach: markers">
-                                <li class="mdc-list-item my-list-item" 
-                                    data-bind="text: place_name, attr: {'data-center': center}"
-                                    onclick="centerOnThisMarker(event)"
-                                ></li>
+                                <li class="mdc-list-item my-list-item" data-bind="text: place_name, attr: {'data-center': center}" onclick="centerOnThisMarker(event)"></li>
                             </div>
                         </div>
                         <div data-bind="if: hasFilter">
                             <div data-bind="foreach: filteredElements">
-                                <li class="mdc-list-item my-list-item" 
-                                    data-bind="text: place_name, attr: {'data-center': center}"
-                                    onclick="centerOnThisMarker(event)"
-                                ></li>
+                                <li class="mdc-list-item my-list-item" data-bind="text: place_name, attr: {'data-center': center}" onclick="centerOnThisMarker(event)"></li>
                             </div>
                         </div>
                         <script>
                             function centerOnThisMarker(e) {
-                                if (map) 
+                                if (map)
                                     map.flyTo({
                                         center: e.target
-                                                .getAttribute("data-center")
-                                                .split(",")
+                                            .getAttribute("data-center")
+                                            .split(",")
                                     })
                             }
                         </script>
@@ -205,15 +200,13 @@
     <script src='https://api.mapbox.com/mapbox.js/plugins/turf/v2.0.2/turf.min.js'></script>
     <script>
 
-
-
-        const accessToken = `pk.eyJ1IjoicmVpc21hdGhldXM5NyIsImEiOiJjanRncWRiZTQwNWxjNDRsZms1djc1NHIyIn0.fvM81OoCXOijNBcWWDtBMA`
+        const accessToken = `pk.eyJ1IjoicmVpc21hdGhldXM5NyIsImEiOiJjanRncWRiZTQwNWxjNDRsZms1djc1NHIyIn0.fvM81OoCXOijNBcWWDtBMA`;
         mapboxgl.accessToken = accessToken;
         var map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/streets-v11',
-            center: [-87.6244, 41.8756],
-            zoom: 13
+            center: [-87.637596, 41.940403],
+            zoom: 12,
         });
 
         var geojson = {
@@ -408,7 +401,7 @@
             let place_name = ""
 
             $.get({
-                url: url,
+                url,
                 context: document.body
             }).done(function (result) {
                 console.log("ajax result >>", result);
@@ -444,11 +437,65 @@
 
 
             map.flyTo({ center });
-            var marker = new mapboxgl.Marker({
-                draggable: true
-            })
+            var marker = new mapboxgl.Marker()
                 .setLngLat(center)
                 .addTo(map)
+
+            const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/cycling/` + 
+                        `${center[0]},${center[1]};-84.512023,39.102779?` + 
+                        `overview=full&geometries=geojson&access_token=` + accessToken;
+
+            $.get({
+                url: directionsUrl
+            })
+                .done(function (result) {
+                    console.log("result >>", result)
+                    if (result.routes && result.routes.length > 0) {
+                        let data = result.routes[0];
+                        let route = data.geometry.coordinates;
+                        let geojson = {
+                            type: 'Feature',
+                            properties: {},
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: route
+                            }
+                        };
+
+                        if (map.getSource('route')) {
+                            map.getSource('route').setData(geojson);
+                        } else {
+                            map.addLayer({
+                                id: 'route',
+                                type: 'line',
+                                source: {
+                                    type: 'geojson',
+                                    data: {
+                                        type: 'Feature',
+                                        properties: {},
+                                        geometry: {
+                                            type: 'LineString',
+                                            coordinates: geojson
+                                        }
+                                    }
+                                },
+                                layout: {
+                                    'line-join': 'round',
+                                    'line-cap': 'round'
+                                },
+                                paint: {
+                                    'line-color': '#6200ee',
+                                    'line-width': 5,
+                                    'line-opacity': 1
+                                }
+                            })
+                        }
+
+                    }
+                })
+                .fail(function (xhr, textStatus, errorThrown) {
+                    console.warn("Fail to fetch mapbox directions API. " + (errorThrown || ""));
+                })
 
         }
 
