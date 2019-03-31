@@ -8,6 +8,7 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.css' rel='stylesheet' />
 
+    <link rel="stylesheet" href="style/style.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" />
     <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
@@ -16,95 +17,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.0/knockout-min.js"></script>
 
-    <style>
-        body {
-            margin: 0px;
-            padding: 0px;
-        }
 
-        .container {
-            width: 100%;
-            height: 100%;
-        }
-
-        #map {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-        }
-
-        .coordinates {
-            background: rgba(0, 0, 0, 0.5);
-            color: #fff;
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            padding: 5px 10px;
-            margin: 0;
-            font-size: 11px;
-            line-height: 18px;
-            border-radius: 3px;
-            display: none;
-        }
-
-        .floating-section {
-
-            margin: 20px;
-            padding: 0px;
-            position: absolute;
-            z-index: 1;
-        }
-
-        .input-wrapper {
-            width: 100%;
-            height: 100%;
-        }
-
-        .my-icon {
-            font-size: 40px;
-        }
-
-        .my-icon-container {
-            min-width: 60px;
-            min-height: 60px;
-        }
-
-        .mdc-drawer {
-            z-index: 100 !important;
-            height: calc(100% - 45px);
-            margin: 10px 10px;
-        }
-
-        .my-markers {
-            height: calc(100% - 16px);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .locations-container {
-            margin: 8px;
-            padding: 8px;
-            flex-grow: 1;
-            overflow-y: auto;
-        }
-
-        .my-div {
-            /* background-color: red; */
-            height: 100%;
-            position: absolute;
-        }
-
-        .my-input {
-            margin: 8px;
-            padding: 0 8px;
-        }
-
-        .my-list-item {
-            height: auto !important;
-        }
-    </style>
 </head>
 
 <body>
@@ -113,10 +26,14 @@
         type='text/css' />
     <div id='map'></div>
     <pre id='coordinates' class='coordinates'></pre>
+    <section class="control-btn-container control-btn-margins mapboxgl-ctrl mapboxgl-ctrl-group">
+        <button class="mapboxgl-ctrl-icon">1</button>
+        <button class="mapboxgl-ctrl-icon">2</button>
+    </section>
     <div class="my-div">
         <aside class="mdc-drawer">
             <div class="mdc-drawer__content">
-                <nav class="mdc-list my-markers">
+                <nav class="mdc-list my-markers-container">
 
                     <div>
                         <a class="mdc-list-item mdc-list-item--activated" href="#" aria-selected="true">
@@ -200,11 +117,13 @@
     <script src='https://api.mapbox.com/mapbox.js/plugins/turf/v2.0.2/turf.min.js'></script>
     <script>
 
+        const tabBar = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
+
         const accessToken = `pk.eyJ1IjoicmVpc21hdGhldXM5NyIsImEiOiJjanRncWRiZTQwNWxjNDRsZms1djc1NHIyIn0.fvM81OoCXOijNBcWWDtBMA`;
         mapboxgl.accessToken = accessToken;
         var map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/streets-v11',
+            style: 'mapbox://styles/mapbox/outdoors-v11',
             center: [-87.637596, 41.940403],
             zoom: 12,
         });
@@ -221,138 +140,6 @@
                 "type": "LineString",
                 "coordinates": []
             }
-        };
-
-        var customData = {
-            "features": [
-                {
-                    "type": "Feature",
-                    "properties": {
-                        "title": "Lincoln Park",
-                        "description": "A northside park that is home to the Lincoln Park Zoo"
-                    },
-                    "geometry": {
-                        "coordinates": [
-                            -87.637596,
-                            41.940403
-                        ],
-                        "type": "Point"
-                    }
-                },
-                {
-                    "type": "Feature",
-                    "properties": {
-                        "title": "Burnham Park",
-                        "description": "A lakefront park on Chicago's south side"
-                    },
-                    "geometry": {
-                        "coordinates": [
-                            -87.603735,
-                            41.829985
-                        ],
-                        "type": "Point"
-                    }
-                },
-                {
-                    "type": "Feature",
-                    "properties": {
-                        "title": "Millennium Park",
-                        "description": "A downtown park known for its art installations and unique architecture"
-                    },
-                    "geometry": {
-                        "coordinates": [
-                            -87.622554,
-                            41.882534
-                        ],
-                        "type": "Point"
-                    }
-                },
-                {
-                    "type": "Feature",
-                    "properties": {
-                        "title": "Grant Park",
-                        "description": "A downtown park that is the site of many of Chicago's favorite festivals and events"
-                    },
-                    "geometry": {
-                        "coordinates": [
-                            -87.619185,
-                            41.876367
-                        ],
-                        "type": "Point"
-                    }
-                },
-                {
-                    "type": "Feature",
-                    "properties": {
-                        "title": "Humboldt Park",
-                        "description": "A large park on Chicago's northwest side"
-                    },
-                    "geometry": {
-                        "coordinates": [
-                            -87.70199,
-                            41.905423
-                        ],
-                        "type": "Point"
-                    }
-                },
-                {
-                    "type": "Feature",
-                    "properties": {
-                        "title": "Douglas Park",
-                        "description": "A large park near in Chicago's North Lawndale neighborhood"
-                    },
-                    "geometry": {
-                        "coordinates": [
-                            -87.699329,
-                            41.860092
-                        ],
-                        "type": "Point"
-                    }
-                },
-                {
-                    "type": "Feature",
-                    "properties": {
-                        "title": "Calumet Park",
-                        "description": "A park on the Illinois-Indiana border featuring a historic fieldhouse"
-                    },
-                    "geometry": {
-                        "coordinates": [
-                            -87.530221,
-                            41.715515
-                        ],
-                        "type": "Point"
-                    }
-                },
-                {
-                    "type": "Feature",
-                    "properties": {
-                        "title": "Jackson Park",
-                        "description": "A lakeside park that was the site of the 1893 World's Fair"
-                    },
-                    "geometry": {
-                        "coordinates": [
-                            -87.580389,
-                            41.783185
-                        ],
-                        "type": "Point"
-                    }
-                },
-                {
-                    "type": "Feature",
-                    "properties": {
-                        "title": "Columbus Park",
-                        "description": "A large park in Chicago's Austin neighborhood"
-                    },
-                    "geometry": {
-                        "coordinates": [
-                            -87.769775,
-                            41.873683
-                        ],
-                        "type": "Point"
-                    }
-                }
-            ],
-            "type": "FeatureCollection"
         };
 
         function forwardGeocoder(query) {
@@ -404,7 +191,6 @@
                 url,
                 context: document.body
             }).done(function (result) {
-                console.log("ajax result >>", result);
 
                 if (result.features && result.features.length > 0) {
 
@@ -420,12 +206,7 @@
                     }
 
                 } else {
-                    places = [
-                        "A very far place.",
-                        "Undefined. Really.",
-                        "There is no data avail"
-                    ]
-                    place_name = ""
+                    place_name = "No where!"
                 }
 
             }).fail(function (xhr, textStatus, errorThrown) {
@@ -434,16 +215,19 @@
             }).always(function () {
                 viewModel.addMarker({ center, place_name });
             })
-
+            
+            let el = document.createElement('i');
+            el.className = 'material-icons marker';      
+            el.textContent = 'place';
 
             map.flyTo({ center });
-            var marker = new mapboxgl.Marker()
+            var marker = new mapboxgl.Marker(el)
                 .setLngLat(center)
                 .addTo(map)
-
-            const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/cycling/` + 
-                        `${center[0]},${center[1]};-84.512023,39.102779?` + 
-                        `overview=full&geometries=geojson&access_token=` + accessToken;
+            
+            const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/cycling/` +
+                `${center[0]},${center[1]};-84.512023,39.102779?` +
+                `overview=full&geometries=geojson&access_token=` + accessToken;
 
             $.get({
                 url: directionsUrl
@@ -498,12 +282,8 @@
                 })
 
         }
+        // End create marker
 
-        // map.on('mousemove', function (e) {
-        //     var features = map.queryRenderedFeatures(e.point, { layers: ['measure-points'] });
-        //     // UI indicator for clicking/hovering a point on the map
-        //     map.getCanvas().style.cursor = (features.length) ? 'pointer' : 'crosshair';
-        // });
 
     </script>
 

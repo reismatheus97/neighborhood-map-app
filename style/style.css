@@ -1,0 +1,109 @@
+body {
+    margin: 0px;
+    padding: 0px;
+}
+
+.container {
+    width: 100%;
+    height: 100%;
+}
+
+#map {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+.coordinates {
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    padding: 5px 10px;
+    margin: 0;
+    font-size: 11px;
+    line-height: 18px;
+    border-radius: 3px;
+    display: none;
+}
+
+.floating-section {
+
+    margin: 20px;
+    padding: 0px;
+    position: absolute;
+    z-index: 1;
+}
+
+.input-wrapper {
+    width: 100%;
+    height: 100%;
+}
+
+.my-icon {
+    font-size: 40px;
+}
+
+.my-icon-container {
+    min-width: 60px;
+    min-height: 60px;
+}
+
+.mdc-drawer {
+    z-index: 100 !important;
+    height: calc(100% - 45px) !important;
+    margin: 10px 10px;
+    border-radius: 4px !important;
+    transition: box-shadow 0.3s !important;
+}
+
+.mdc-drawer:hover {
+    box-shadow: 0px 0px 5px #6200eea6 !important;
+  }
+
+.my-markers-container {
+    height: calc(100% - 16px);
+    display: flex;
+    flex-direction: column;
+}
+
+.locations-container {
+    margin: 8px;
+    padding: 8px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.my-div {
+    /* background-color: red; */
+    height: 100%;
+    position: absolute;
+}
+
+.my-input {
+    margin: 8px;
+    padding: 0 8px;
+}
+
+.my-list-item {
+    height: auto !important;
+}
+
+.control-btn-container {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+}
+
+.control-btn-margins {
+    margin: 30px 10px
+}
+
+.marker {
+    font-size: 50px !important;
+    color: #e29c2b;
+    padding-bottom: 3rem !important;
+}
