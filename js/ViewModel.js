@@ -5,6 +5,24 @@ var MapViewModel = function () {
     self.filterQuery = ko.observable();
     self.filteredElements = ko.observableArray();
 
+    self.markersMode = ko.observable(true);
+    self.directions = ko.observableArray();
+
+    self.origin = ko.observable();
+    self.destination = ko.observable();
+    self.travelProfile = ko.observable("driving");
+
+    self.addDirections = function (coordinate) {
+        if (self.directions().length > 1) {
+            alert("removing all directions...");
+            self.directions.removeAll();
+        } else {
+            self.directions.push(coordinate);
+        }
+        
+    }
+
+
     self.hasFilter = ko.computed(function() {
         if (self.filterQuery()) {
             const filterQuery = self.filterQuery().toLowerCase();

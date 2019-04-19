@@ -9,14 +9,15 @@
     <link href='https://api.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.css' rel='stylesheet' />
 
     <link rel="stylesheet" href="style/style.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500|Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp">
+
+
     <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" />
     <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.0/knockout-min.js"></script>
-
 
 </head>
 
@@ -26,9 +27,66 @@
         type='text/css' />
     <div id='map'></div>
     <pre id='coordinates' class='coordinates'></pre>
-    <section class="control-btn-container control-btn-margins mapboxgl-ctrl mapboxgl-ctrl-group">
-        <button class="mapboxgl-ctrl-icon">1</button>
-        <button class="mapboxgl-ctrl-icon">2</button>
+    <section class="control-btn-container 
+                    control-btn-margins-2
+                    mapboxgl-ctrl 
+                    mapboxgl-ctrl-group">
+        <button class="mdc-button width-100" onclick="confirmationdialog.open()">Travel Options</button>
+    </section>
+    <section class="control-btn-container 
+                    control-btn-margins 
+                    mapboxgl-ctrl 
+                    mapboxgl-ctrl-group">
+
+        <div class="mdc-form-field">
+            <div class="mdc-radio">
+                <input class="mdc-radio__native-control" 
+                    type="radio" 
+                    id="radio-1" 
+                    name="radios"
+                    data-bind="checked: markersMode, checkedValue: true"
+                    onclick="clearPointsAndRoute()">
+                <div class="mdc-radio__background">
+                    <div class="mdc-radio__outer-circle"></div>
+                    <div class="mdc-radio__inner-circle"></div>
+                </div>
+            </div>
+            <label for="radio-1" class="material-icons">add_location</label>
+        </div>
+        |
+        <div class="mdc-form-field">
+            <label for="radio-2" class="material-icons">directions</label>
+            <div class="mdc-radio">
+                <input class="mdc-radio__native-control" 
+                    type="radio" 
+                    id="radio-2" 
+                    name="radios" 
+                    data-bind="checked: markersMode, checkedValue: false"
+                    onclick="callUserAttention(event)"
+                    >
+                <div class="mdc-radio__background">
+                    <div class="mdc-radio__outer-circle"></div>
+                    <div class="mdc-radio__inner-circle"></div>
+                </div>
+                <script>
+                    // It displays the snackbar
+                    // and blinks locations list
+                    function callUserAttention(event) {
+                        if (snackbar) snackbar.open();
+                        let el = document.querySelector('.locations-container');
+
+                        el.classList.add("locations-container--hovered");
+                        setTimeout( function () { el.classList.remove("locations-container--hovered") }, 1000);
+
+                        setTimeout( function () { el.classList.add("locations-container--hovered") }, 1300);
+                        setTimeout( function () { el.classList.remove("locations-container--hovered") }, 2300);
+                        setTimeout( function () { el.classList.add("locations-container--hovered") }, 2800);
+                        setTimeout( function () { el.classList.remove("locations-container--hovered") }, 3800);
+                        
+                    }
+                </script>
+            </div>
+        </div>
     </section>
     <div class="my-div">
         <aside class="mdc-drawer">
@@ -45,23 +103,50 @@
                     <div class="locations-container">
                         <div data-bind="ifnot: hasFilter">
                             <div data-bind="foreach: markers">
-                                <li class="mdc-list-item my-list-item" data-bind="text: place_name, attr: {'data-center': center}" onclick="centerOnThisMarker(event)"></li>
+                                <li class="mdc-list-item my-list-item" data-bind="text: place_name, attr: {'data-center': center}" onclick="handleClick(event)"></li>
                             </div>
                         </div>
                         <div data-bind="if: hasFilter">
                             <div data-bind="foreach: filteredElements">
-                                <li class="mdc-list-item my-list-item" data-bind="text: place_name, attr: {'data-center': center}" onclick="centerOnThisMarker(event)"></li>
+                                <li class="mdc-list-item my-list-item" data-bind="text: place_name, attr: {'data-center': center}" onclick="handleClick(event)"></li>
                             </div>
                         </div>
                         <script>
-                            function centerOnThisMarker(e) {
-                                if (map)
-                                    map.flyTo({
-                                        center: e.target
-                                            .getAttribute("data-center")
-                                            .split(",")
-                                    })
+                            function handleClick(e) {
+                                let viewModel = ko.dataFor(document.body)
+
+                                let center = e.target
+                                    .getAttribute("data-center")
+                                    .split(",")
+
+                                if (viewModel.markersMode())
+                                    centerOnThisMarker()
+                                else
+                                    selectDirectionPoints()
+
+                                function centerOnThisMarker() {
+                                    if (map) map.flyTo({ center })
+                                }
+
+                                function selectDirectionPoints() {
+
+                                    if (!viewModel.origin()) {
+                                        viewModel.origin({ x: center[0], y: center[1] })
+                                        e.target.className += ' directions-origin'
+                                        centerOnThisMarker()
+                                        console.log("e target >>", e.target)
+
+                                    } else if (!viewModel.destination()) {
+                                        viewModel.destination({ x: center[0], y: center[1] })
+                                        e.target.className += ' directions-destination'
+                                        discoverDirections()
+                                        console.log("e target >>", e.target)
+                                    } else if (alertdialog) alertdialog.open()
+
+                                }
+
                             }
+
                         </script>
                     </div>
                     <div class="mdc-tab-bar" role="tablist">
@@ -113,12 +198,140 @@
         </aside>
     </div>
 
-    <script src="./js/app.js"></script>
-    <script src='https://api.mapbox.com/mapbox.js/plugins/turf/v2.0.2/turf.min.js'></script>
+    <!-- MDCDialog -->
+    <!-- Alert Dialog -->
+    <div class="mdc-dialog" id="alertdialog" role="alertdialog" aria-modal="true" aria-labelledby="my-dialog-title" aria-describedby="my-dialog-content">
+        <div class="mdc-dialog__container">
+            <div class="mdc-dialog__surface">
+                <!-- Title cannot contain leading whitespace due to mdc-typography-baseline-top() -->
+                <h2 class="mdc-dialog__title" id="my-dialog-title">
+                    <!--
+                    -->
+                    Are you sure?
+                    <!-- 
+            -->
+                </h2>
+                <div class="mdc-dialog__content" id="my-dialog-content">
+                    This action will clear both origin and destination points.
+                </div>
+                <footer class="mdc-dialog__actions">
+                    <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="no">
+                        <span class="mdc-button__label">Cancel</span>
+                    </button>
+                    <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="yes" onclick="clearPointsAndRoute()">
+                        <span class="mdc-button__label">Ok, clear</span>
+                    </button>
+                </footer>
+            </div>
+        </div>
+        <div class="mdc-dialog__scrim"></div>
+    </div>
+    <!-- end Alert Dialog -->
+    <!-- Confirmation Dialog -->
+    <div class="mdc-dialog" id="confirmationdialog" role="alertdialog" aria-modal="true" aria-labelledby="my-cdialog-title" aria-describedby="my-cdialog-content">
+        <div class="mdc-dialog__container">
+            <div class="mdc-dialog__surface">
+                <!-- Title cannot contain leading whitespace due to mdc-typography-baseline-top() -->
+                <h2 class="mdc-dialog__title" id="my-dialog-title">
+                    <!--
+                        -->Choose a travel profile
+                    <!--
+                    -->
+                </h2>
+                <div class="mdc-dialog__content" id="my-dialog-content">
+                    <ul class="mdc-list">
+                        <li class="my-radio-list" tabindex="0">
+                            <span class="mdc-list-item__graphic">
+                                <div class="mdc-radio">
+                                    <input class="mdc-radio__native-control" type="radio" id="test-dialog-baseline-confirmation-radio-1" name="test-dialog-baseline-confirmation-radio-group"
+                                        checked data-bind="checked: travelProfile, checkedValue: 'cycling'">
+                                    <div class="mdc-radio__background">
+                                        <div class="mdc-radio__outer-circle"></div>
+                                        <div class="mdc-radio__inner-circle"></div>
+                                    </div>
+                                </div>
+                            </span>
+                            <label id="test-dialog-baseline-confirmation-radio-1-label" for="test-dialog-baseline-confirmation-radio-1" class="mdc-list-item__text">
+                                Cycling
+                            </label>
+                        </li>
+                        <li class="my-radio-list" tabindex="1">
+                            <span class="mdc-list-item__graphic">
+                                <div class="mdc-radio">
+                                    <input class="mdc-radio__native-control" type="radio" id="test-dialog-baseline-confirmation-radio-2" name="test-dialog-baseline-confirmation-radio-group"
+                                        data-bind="checked: travelProfile, checkedValue: 'driving'">
+                                    <div class="mdc-radio__background">
+                                        <div class="mdc-radio__outer-circle"></div>
+                                        <div class="mdc-radio__inner-circle"></div>
+                                    </div>
+                                </div>
+                            </span>
+                            <label id="test-dialog-baseline-confirmation-radio-2-label" for="test-dialog-baseline-confirmation-radio-2" class="mdc-list-item__text">
+                                Driving
+                            </label>
+                        </li>
+                        <li class="my-radio-list" tabindex="2">
+                            <span class="mdc-list-item__graphic">
+                                <div class="mdc-radio">
+                                    <input class="mdc-radio__native-control" type="radio" id="test-dialog-baseline-confirmation-radio-3" name="test-dialog-baseline-confirmation-radio-group"
+                                        data-bind="checked: travelProfile, checkedValue: 'walking'">
+                                    <div class="mdc-radio__background">
+                                        <div class="mdc-radio__outer-circle"></div>
+                                        <div class="mdc-radio__inner-circle"></div>
+                                    </div>
+                                </div>
+                            </span>
+                            <label id="test-dialog-baseline-confirmation-radio-3-label" for="test-dialog-baseline-confirmation-radio-3" class="mdc-list-item__text">
+                                Walking
+                            </label>
+                        </li>
+                        <!-- ... -->
+                    </ul>
+                </div>
+                <footer class="mdc-dialog__actions">
+                    <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
+                        <span class="mdc-button__label">Cancel</span>
+                    </button>
+                    <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="accept">
+                        <span class="mdc-button__label">OK</span>
+                    </button>
+                </footer>
+            </div>
+        </div>
+        <div class="mdc-dialog__scrim"></div>
+    </div>
+    <!-- end Confirmation Dialog -->
+    <!-- end MDCDialog -->
+
+    <!-- MDCSnackbar -->
+    <div class="mdc-snackbar mdc-snackbar--closing">
+        <div class="mdc-snackbar__surface">
+            <div class="mdc-snackbar__label" role="status" aria-live="polite">
+                Choose your origin and destination on your locations list! 
+            </div>
+            
+        </div>
+    </div>
+    <!-- end MDCSnackbar -->
+
+    <script src="./js/ViewModel.js"></script>
     <script>
 
         const tabBar = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
+        const alertdialog = new mdc.dialog.MDCDialog(document.querySelector('#alertdialog'));
+        const confirmationdialog = new mdc.dialog.MDCDialog(document.querySelector('#confirmationdialog'));
+        const snackbar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
+        snackbar.timeoutMs = 6000;
 
+        // const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
+
+        // select.listen('MDCSelect:change', () => {
+        //     console.log(`Selected option at index ${select.selectedIndex} with value "${select.value}"`);
+        // });
+
+    </script>
+    <script src='https://api.mapbox.com/mapbox.js/plugins/turf/v2.0.2/turf.min.js'></script>
+    <script>
         const accessToken = `pk.eyJ1IjoicmVpc21hdGhldXM5NyIsImEiOiJjanRncWRiZTQwNWxjNDRsZms1djc1NHIyIn0.fvM81OoCXOijNBcWWDtBMA`;
         mapboxgl.accessToken = accessToken;
         var map = new mapboxgl.Map({
@@ -142,29 +355,14 @@
             }
         };
 
-        function forwardGeocoder(query) {
-            var matchingFeatures = [];
-            for (var i = 0; i < customData.features.length; i++) {
-                var feature = customData.features[i];
-                // handle queries with different capitalization than the source data by calling toLowerCase()
-                if (feature.properties.title.toLowerCase().search(query.toLowerCase()) !== -1) {
-                    // add a tree emoji as a prefix for custom data results
-                    // using carmen geojson format: https://github.com/mapbox/carmen/blob/master/carmen-geojson.md
-                    feature['place_name'] = '🌲 ' + feature.properties.title;
-                    feature['center'] = feature.geometry.coordinates;
-                    feature['place_type'] = ['park'];
-                    matchingFeatures.push(feature);
-                }
-            }
-            return matchingFeatures;
-        }
-
         map.addControl(new MapboxGeocoder({
             accessToken: mapboxgl.accessToken,
-            localGeocoder: forwardGeocoder,
+            // localGeocoder: forwardGeocoder,
             zoom: 14,
             placeholder: "Where?"
         }));
+
+        map.addControl(new mapboxgl.NavigationControl());
 
         map.addControl(new mapboxgl.GeolocateControl({
             positionOptions: {
@@ -173,7 +371,6 @@
             trackUserLocation: true
         }));
 
-        map.addControl(new mapboxgl.NavigationControl());
 
         map.on('click', createMarker);
 
@@ -187,46 +384,76 @@
             const viewModel = ko.dataFor(document.body)
             let place_name = ""
 
-            $.get({
-                url,
-                context: document.body
-            }).done(function (result) {
+            if (viewModel.markersMode()) {
+                $.get({
+                    url,
+                    context: document.body
+                }).done(function (result) {
 
-                if (result.features && result.features.length > 0) {
+                    if (result.features && result.features.length > 0) {
 
-                    if (result.features[0].place_name) {
-                        place_name = result.features[0].place_name.split(",").splice(0, 2).join();
+                        if (result.features[0].place_name) {
+                            place_name = result.features[0].place_name.split(",").splice(0, 2).join();
+                        }
+
+                        let country = result.features.find(it => it.place_type == "country")
+
+                        if (country) {
+                            let country_code = country.properties.short_code.toUpperCase();
+                            place_name += ", " + country_code;
+                        }
+
+                    } else {
+                        place_name = "No where!"
                     }
 
-                    let country = result.features.find(it => it.place_type == "country")
+                }).fail(function (xhr, textStatus, errorThrown) {
+                    console.warn("Fail to fetch mapbox geocoding API. " + (errorThrown || ""));
+                    place_name = ""
+                }).always(function () {
+                    viewModel.addMarker({ center, place_name });
+                })
 
-                    if (country) {
-                        let country_code = country.properties.short_code.toUpperCase();
-                        place_name += ", " + country_code;
-                    }
+                let el = document.createElement('i');
+                el.className = 'material-icons marker';
+                el.textContent = 'place';
 
-                } else {
-                    place_name = "No where!"
-                }
+                map.flyTo({ center });
+                var marker = new mapboxgl.Marker(el)
+                    .setLngLat(center)
+                    .addTo(map)
+            } else {
+                map.flyTo({ center });
+            }
 
-            }).fail(function (xhr, textStatus, errorThrown) {
-                console.warn("Fail to fetch mapbox geocoding API. " + (errorThrown || ""));
-                place_name = ""
-            }).always(function () {
-                viewModel.addMarker({ center, place_name });
-            })
-            
-            let el = document.createElement('i');
-            el.className = 'material-icons marker';      
-            el.textContent = 'place';
 
-            map.flyTo({ center });
-            var marker = new mapboxgl.Marker(el)
-                .setLngLat(center)
-                .addTo(map)
-            
-            const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/cycling/` +
-                `${center[0]},${center[1]};-84.512023,39.102779?` +
+
+        }
+        // End create marker
+
+        function clearPointsAndRoute() {
+            const viewModel = ko.dataFor(document.body);
+            viewModel.origin("");
+            viewModel.destination("");
+            document.querySelector(".directions-origin")
+                .classList.remove("directions-origin");
+            document.querySelector(".directions-destination")
+                .classList.remove("directions-destination");
+
+            map.removeLayer('route');
+            map.removeSource('route');
+
+        }
+
+        function discoverDirections() {
+
+            const viewModel = ko.dataFor(document.body)
+            const A = viewModel.origin()
+            const B = viewModel.destination()
+            const profile = viewModel.travelProfile();
+
+            const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/${profile.toLowerCase()}/` +
+                `${A.x},${A.y};${B.x},${B.y}?` +
                 `overview=full&geometries=geojson&access_token=` + accessToken;
 
             $.get({
@@ -273,6 +500,7 @@
                                     'line-opacity': 1
                                 }
                             })
+                            map.getSource('route').setData(geojson);
                         }
 
                     }
@@ -282,7 +510,6 @@
                 })
 
         }
-        // End create marker
 
 
     </script>
