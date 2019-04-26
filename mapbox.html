@@ -40,11 +40,7 @@
 
         <div class="mdc-form-field">
             <div class="mdc-radio">
-                <input class="mdc-radio__native-control" 
-                    type="radio" 
-                    id="radio-1" 
-                    name="radios"
-                    data-bind="checked: markersMode, checkedValue: true"
+                <input class="mdc-radio__native-control" type="radio" id="radio-1" name="radios" data-bind="checked: markersMode, checkedValue: true"
                     onclick="clearPointsAndRoute()">
                 <div class="mdc-radio__background">
                     <div class="mdc-radio__outer-circle"></div>
@@ -57,18 +53,14 @@
         <div class="mdc-form-field">
             <label for="radio-2" class="material-icons">directions</label>
             <div class="mdc-radio">
-                <input class="mdc-radio__native-control" 
-                    type="radio" 
-                    id="radio-2" 
-                    name="radios" 
-                    data-bind="checked: markersMode, checkedValue: false"
-                    onclick="callUserAttention(event)"
-                    >
+                <input class="mdc-radio__native-control" type="radio" id="radio-2" name="radios" data-bind="checked: markersMode, checkedValue: false"
+                    onclick="callUserAttention(event)">
                 <div class="mdc-radio__background">
                     <div class="mdc-radio__outer-circle"></div>
                     <div class="mdc-radio__inner-circle"></div>
                 </div>
                 <script>
+
                     // It displays the snackbar
                     // and blinks locations list
                     function callUserAttention(event) {
@@ -76,13 +68,11 @@
                         let el = document.querySelector('.locations-container');
 
                         el.classList.add("locations-container--hovered");
-                        setTimeout( function () { el.classList.remove("locations-container--hovered") }, 1000);
-
-                        setTimeout( function () { el.classList.add("locations-container--hovered") }, 1300);
-                        setTimeout( function () { el.classList.remove("locations-container--hovered") }, 2300);
-                        setTimeout( function () { el.classList.add("locations-container--hovered") }, 2800);
-                        setTimeout( function () { el.classList.remove("locations-container--hovered") }, 3800);
-                        
+                        setTimeout(function () { el.classList.remove("locations-container--hovered") }, 1000);
+                        setTimeout(function () { el.classList.add("locations-container--hovered") }, 1300);
+                        setTimeout(function () { el.classList.remove("locations-container--hovered") }, 2300);
+                        setTimeout(function () { el.classList.add("locations-container--hovered") }, 2800);
+                        setTimeout(function () { el.classList.remove("locations-container--hovered") }, 3800);
                     }
                 </script>
             </div>
@@ -292,11 +282,20 @@
                     <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
                         <span class="mdc-button__label">Cancel</span>
                     </button>
-                    <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="accept">
+                    <button type="button" class="mdc-button mdc-dialog__button" 
+                        data-mdc-dialog-action="accept" onclick="handleConfirmation()"
+                    >
                         <span class="mdc-button__label">OK</span>
                     </button>
                 </footer>
             </div>
+            <script>
+                function handleConfirmation() {
+                    const viewModel = ko.dataFor(document.body)
+                    if (viewModel.origin() && viewModel.destination())
+                        discoverDirections();
+                }
+            </script>
         </div>
         <div class="mdc-dialog__scrim"></div>
     </div>
@@ -307,9 +306,10 @@
     <div class="mdc-snackbar mdc-snackbar--closing">
         <div class="mdc-snackbar__surface">
             <div class="mdc-snackbar__label" role="status" aria-live="polite">
-                Choose your origin and destination on your locations list! 
+                <div>Choose your origin and destination points</div>
+                <div>by clicking your locations' list items!</div>
             </div>
-            
+
         </div>
     </div>
     <!-- end MDCSnackbar -->
@@ -321,7 +321,6 @@
         const alertdialog = new mdc.dialog.MDCDialog(document.querySelector('#alertdialog'));
         const confirmationdialog = new mdc.dialog.MDCDialog(document.querySelector('#confirmationdialog'));
         const snackbar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-        snackbar.timeoutMs = 6000;
 
         // const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
 
@@ -357,9 +356,9 @@
 
         map.addControl(new MapboxGeocoder({
             accessToken: mapboxgl.accessToken,
-            // localGeocoder: forwardGeocoder,
-            zoom: 14,
-            placeholder: "Where?"
+            zoom: 17,
+            placeholder: "Where?",
+            reverseGeocode: true
         }));
 
         map.addControl(new mapboxgl.NavigationControl());
@@ -370,7 +369,6 @@
             },
             trackUserLocation: true
         }));
-
 
         map.on('click', createMarker);
 
@@ -391,7 +389,7 @@
                 }).done(function (result) {
 
                     if (result.features && result.features.length > 0) {
-
+                        console.log('mapbox result >>', result)
                         if (result.features[0].place_name) {
                             place_name = result.features[0].place_name.split(",").splice(0, 2).join();
                         }
@@ -411,17 +409,64 @@
                     console.warn("Fail to fetch mapbox geocoding API. " + (errorThrown || ""));
                     place_name = ""
                 }).always(function () {
-                    viewModel.addMarker({ center, place_name });
+                    viewModel.addMarker({
+                        center,
+                        place_name
+                    });
+
+                    let popup = new mapboxgl.Popup({ offset: 50, anchor: 'right' })
+                        .setText(place_name)
+                        .setLngLat(center)
+                    let markerContainer = document.createElement('div');
+                    markerContainer.className = 'marker-container';
+                    let markerIcon = document.createElement('i');
+                    markerIcon.className = 'material-icons marker';
+                    markerIcon.textContent = 'place';
+                    markerIcon.onclick = function (e) {
+                        console.log(1)
+                        e.stopPropagation();
+                        popup.addTo(map)
+                    };
+                    markerContainer.appendChild(markerIcon);
+
+                    map.easeTo({ center });
+
+                    var marker = new mapboxgl.Marker(markerContainer)
+                        .setLngLat(center)
+                        // .setPopup(popup)
+                        .addTo(map)
+                    
+                    console.log(2);
+
                 })
 
-                let el = document.createElement('i');
-                el.className = 'material-icons marker';
-                el.textContent = 'place';
+                // .........................
+                // <!-- 
+                //                 const teste = `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=37.7891838|-122.4033522&gsradius=10000&gslimit=10&format=json`
+                //                 // `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${center[0]}|${center[1]}&gsradius=10000&gslimit=10&format=json`;
 
-                map.flyTo({ center });
-                var marker = new mapboxgl.Marker(el)
-                    .setLngLat(center)
-                    .addTo(map)
+                //                 console.log("url teste >>", teste)
+
+                //                 $.ajax({
+                //                     url: teste,
+                //                     type: "GET",
+                //                     crossDomain: true,
+                //                     dataType: "json",
+                //                     context: document.body
+                //                 }).done(function (result) {
+                //                     if (result && result.query.geosearch && result.query.geosearch.length > 0) {
+                //                         result.query.geosearch.map(it => {
+                //                             let nearbyLocationsMarker = new mapboxgl.Marker(markerIcon)
+                //                                 .setLngLat([
+                //                                     it.lat,
+                //                                     it.lon
+                //                                 ])
+                //                                 .addTo(map)
+                //                         })
+                //                     }
+                //                 }) -->
+
+                //  ...........................
             } else {
                 map.flyTo({ center });
             }
@@ -433,15 +478,23 @@
 
         function clearPointsAndRoute() {
             const viewModel = ko.dataFor(document.body);
+
+            if (viewModel.origin()) {
+                document.querySelector(".directions-origin")
+                    .classList.remove("directions-origin");
+
+                if (viewModel.destination()) {
+                    document.querySelector(".directions-destination")
+                        .classList.remove("directions-destination");
+
+                    map.removeLayer('route');
+                    map.removeSource('route');
+                }
+
+            }
+
             viewModel.origin("");
             viewModel.destination("");
-            document.querySelector(".directions-origin")
-                .classList.remove("directions-origin");
-            document.querySelector(".directions-destination")
-                .classList.remove("directions-destination");
-
-            map.removeLayer('route');
-            map.removeSource('route');
 
         }
 
