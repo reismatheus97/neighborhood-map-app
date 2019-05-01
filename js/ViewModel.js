@@ -5,12 +5,14 @@ var MapViewModel = function () {
     self.filterQuery = ko.observable();
     self.filteredElements = ko.observableArray();
 
+    self.venues = ko.observableArray();
+
     self.markersMode = ko.observable(true);
     self.directions = ko.observableArray();
-
     self.origin = ko.observable();
     self.destination = ko.observable();
     self.travelProfile = ko.observable("driving");
+    self.isDrawerOpen = ko.observable(true);
 
     self.addDirections = function (coordinate) {
         if (self.directions().length > 1) {
@@ -36,6 +38,11 @@ var MapViewModel = function () {
         }
         return !!self.filterQuery();
     }, self);
+
+    self.addVenue = function (venue) {
+        self.venues.push(venue);
+        // self.numberOfVenues(self.numberOfVenues() + 1);
+    }
 
     self.addMarker = function (marker) {
         self.markers.push(marker);
