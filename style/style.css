@@ -148,7 +148,9 @@ body {
 .marker {
     font-size: 50px !important;
     color: #e29c2b;
-    transition: color 0.3s !important
+    transition: color 0.3s !important;
+    animation-name: fade-in;
+    animation-duration: 0.3s;
 }
 
 .marker-container {
@@ -214,8 +216,6 @@ body {
 }
 
 .mdc-card {
-    /* width: 290px !important;
-    height: 230px !important; */
     max-width: 290px !important;
     max-height: 230px !important;
     width: auto !important;
@@ -260,6 +260,42 @@ body {
     font-weight: 500 !important;
 }
 
-mdc-typography--subtitle2 {
-    font-weight: 400 !important;
+.mdc-card {
+    z-index: 250 !important;
+}
+
+.venue {
+    font-size: 40px !important;
+    color: #db1d1d;
+    transition: color 0.3s !important;
+    animation-name: fade-in;
+    animation-duration: 0.3s;
+}
+
+.venue:hover {
+    font-size: 40px !important;
+    color: #59afc9;
+    transition: color 0.3s !important;
+    animation-name: fade-in;
+    animation-duration: 0.3s;
+}
+
+.fab-close-popups {
+    position: absolute !important;
+    z-index: 1;
+    width: 35px !important;
+    height: 35px !important;
+    margin: 12px !important;
+    bottom: 110px;
+    right: 0;
+}
+
+.fab-close-venue-markers {
+    position: absolute !important;
+    z-index: 1;
+    width: 35px !important;
+    height: 35px !important;
+    margin: 12px !important;
+    bottom: 110px;
+    right: 50px;
 }

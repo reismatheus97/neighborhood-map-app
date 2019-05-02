@@ -18,76 +18,105 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.0/knockout-min.js"></script>
-
+    <script src='https://api.mapbox.com/mapbox.js/plugins/turf/v2.0.2/turf.min.js'></script>
 </head>
 
 <body>
     <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v3.1.6/mapbox-gl-geocoder.min.js'></script>
     <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v3.1.6/mapbox-gl-geocoder.css'
         type='text/css' />
-    <div id='map'></div>
+    <!-- MapBox -->
+    <main id='map'></main>
     <pre id='coordinates' class='coordinates'></pre>
+    <!-- end MapBox -->
+
+    <!-- Travel options section -->
     <section class="control-btn-container 
                     control-btn-margins-2
                     mapboxgl-ctrl 
                     mapboxgl-ctrl-group">
-        <button class="mdc-button width-100" onclick="confirmationdialog.open()">Travel Options</button>
+        <button class="mdc-button width-100" onclick="confirmationdialog.open()"
+            title="Click to change your travel profile"
+        >Travel Options</button>
     </section>
+    <!-- end Travel options section -->
+
+    <!-- Radio buttons section -->
     <section class="control-btn-container 
                     control-btn-margins 
                     mapboxgl-ctrl 
                     mapboxgl-ctrl-group">
 
         <div class="mdc-form-field">
-            <div class="mdc-radio">
+            <div class="mdc-radio" title="Swipe to normal mode">
                 <input class="mdc-radio__native-control" type="radio" id="radio-1" name="radios" data-bind="checked: markersMode, checkedValue: true"
-                    onclick="clearPointsAndRoute()">
+                    onclick="handleMarkersRadio()">
                 <div class="mdc-radio__background">
                     <div class="mdc-radio__outer-circle"></div>
                     <div class="mdc-radio__inner-circle"></div>
                 </div>
             </div>
             <label for="radio-1" class="material-icons">add_location</label>
+            <script>
+                function handleMarkersRadio() {
+                    if (markersSnackBar) markersSnackBar.open()
+                    clearPointsAndRoute()
+                }
+            </script>
         </div>
         |
         <div class="mdc-form-field">
             <label for="radio-2" class="material-icons">directions</label>
             <div class="mdc-radio">
                 <input class="mdc-radio__native-control" type="radio" id="radio-2" name="radios" data-bind="checked: markersMode, checkedValue: false"
-                    onclick="callUserAttention(event)">
+                    onclick="handleDirectionsRadio(event)" title="Swipe to directions mode">
                 <div class="mdc-radio__background">
                     <div class="mdc-radio__outer-circle"></div>
                     <div class="mdc-radio__inner-circle"></div>
                 </div>
                 <script>
-
                     // It displays the snackbar
                     // and blinks locations list
-                    function callUserAttention(event) {
-                        if (snackbar) snackbar.open();
-                        let el = document.querySelector('.locations-container');
+                    function handleDirectionsRadio(event) {
+                        if (directionsSnackBar) directionsSnackBar.open()
 
-                        el.classList.add("locations-container--hovered");
-                        setTimeout(function () { el.classList.remove("locations-container--hovered") }, 1000);
-                        setTimeout(function () { el.classList.add("locations-container--hovered") }, 1300);
-                        setTimeout(function () { el.classList.remove("locations-container--hovered") }, 2300);
-                        setTimeout(function () { el.classList.add("locations-container--hovered") }, 2800);
-                        setTimeout(function () { el.classList.remove("locations-container--hovered") }, 3800);
+                        if (drawer && !drawer.open) toggleDrawer()
+
+                        let el = document.querySelector('.locations-container')
+                        el.classList.add("locations-container--hovered")
+                        setTimeout(function () { el.classList.remove("locations-container--hovered") }, 1000)
+                        setTimeout(function () { el.classList.add("locations-container--hovered") }, 1300)
+                        setTimeout(function () { el.classList.remove("locations-container--hovered") }, 2300)
+                        setTimeout(function () { el.classList.add("locations-container--hovered") }, 2800)
+                        setTimeout(function () { el.classList.remove("locations-container--hovered") }, 3800)
                     }
                 </script>
             </div>
         </div>
     </section>
+    <!-- end Radio buttons section -->
+
+    <!-- FABs -->
     <button class="mdc-fab open-drawer" onclick="toggleDrawer()">
-        <span class="mdc-fab__icon material-icons">swap_horiz</span>
+        <span title="Click to open drawer" class="mdc-fab__icon material-icons">swap_horiz</span>
     </button>
-    <!-- <div class="drawer-container"> -->
+    <button class="mdc-fab fab-close-popups" onclick="closePopups()">
+        <span title="Click to close popups" class="mdc-fab__icon material-icons">delete_sweep</span>
+    </button>
+    <button class="mdc-fab fab-close-venue-markers" onclick="closeVenues()">
+        <span title="Click to close venue markers" class="mdc-fab__icon material-icons">location_off</span>
+    </button>
+    <!-- end FABs -->
+    
+    <!-- Drawer -->
     <aside class="mdc-drawer mdc-drawer--dismissible mdc-drawer--open">
         <div class="mdc-drawer__content">
             <nav class="mdc-list my-markers-container">
 
                 <div class="width-100">
-                    <button class="mdc-icon-button my-mdc-fab material-icons" onclick="toggleDrawer()">
+                    <button class="mdc-icon-button my-mdc-fab material-icons" onclick="toggleDrawer()"
+                        title="Click to close drawer"
+                    >
                         swap_horiz
                     </button>
                     <a class="mdc-list-item locations-title" href="javascript:" aria-selected="true">
@@ -99,9 +128,9 @@
                 </div>
                 <script>
                     function toggleDrawer() {
-                        let viewModel = ko.dataFor(document.body);
+                        let viewModel = ko.dataFor(document.body)
                         viewModel.isDrawerOpen(!drawer.open)
-                        drawer.open = !drawer.open;
+                        drawer.open = !drawer.open
                     };
                 </script>
 
@@ -139,13 +168,11 @@
                                     viewModel.origin({ x: center[0], y: center[1] })
                                     e.target.className += ' directions-origin'
                                     centerOnThisMarker()
-                                    console.log("e target >>", e.target)
 
                                 } else if (!viewModel.destination()) {
                                     viewModel.destination({ x: center[0], y: center[1] })
                                     e.target.className += ' directions-destination'
                                     discoverDirections()
-                                    console.log("e target >>", e.target)
                                 } else if (alertdialog) alertdialog.open()
 
                             }
@@ -201,7 +228,7 @@
 
         </div>
     </aside>
-    <!-- </div> -->
+    <!-- end Drawer -->
 
     <!-- MDCDialog -->
     <!-- Alert Dialog -->
@@ -304,6 +331,7 @@
             </div>
             <script>
                 function handleConfirmation() {
+                    // the ViewModel instance 
                     const viewModel = ko.dataFor(document.body)
                     if (viewModel.origin() && viewModel.destination())
                         discoverDirections();
@@ -316,7 +344,8 @@
     <!-- end MDCDialog -->
 
     <!-- MDCSnackbar -->
-    <div class="mdc-snackbar mdc-snackbar--closing">
+    <!-- markers SnackBar -->
+    <div id="directionsSnack" class="mdc-snackbar mdc-snackbar--closing">
         <div class="mdc-snackbar__surface">
             <div class="mdc-snackbar__label" role="status" aria-live="polite">
                 <div>Choose your origin and destination points</div>
@@ -325,39 +354,46 @@
 
         </div>
     </div>
+    <!-- end markers SnackBar -->
+    <!-- directions SnackBar -->
+    <div id="markersSnack" class="mdc-snackbar mdc-snackbar--closing">
+        <div class="mdc-snackbar__surface">
+            <div class="mdc-snackbar__label" role="status" aria-live="polite">
+                <div>Create markers from your favorite locations by clicking the map.</div>
+                <br/>
+                <div>Move around map with arrow keys!</div>
+            </div>
+
+        </div>
+    </div>
+    <!-- end directions SnackBar -->
     <!-- end MDCSnackbar -->
 
     <script src="./js/ViewModel.js"></script>
     <script>
 
-        const drawer = new mdc.drawer.MDCDrawer.attachTo(document.querySelector('.mdc-drawer'));
-        const tabBar = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'));
-        const alertdialog = new mdc.dialog.MDCDialog(document.querySelector('#alertdialog'));
-        const confirmationdialog = new mdc.dialog.MDCDialog(document.querySelector('#confirmationdialog'));
-        const snackbar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-
-        // const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
-
-        // select.listen('MDCSelect:change', () => {
-        //     console.log(`Selected option at index ${select.selectedIndex} with value "${select.value}"`);
-        // });
+        const drawer = new mdc.drawer.MDCDrawer.attachTo(document.querySelector('.mdc-drawer'))
+        const tabBar = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
+        const alertdialog = new mdc.dialog.MDCDialog(document.querySelector('#alertdialog'))
+        const confirmationdialog = new mdc.dialog.MDCDialog(document.querySelector('#confirmationdialog'))
+        const directionsSnackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('#directionsSnack'))
+        const markersSnackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('#markersSnack'))
+        markersSnackBar.timeoutMs = 6000
 
     </script>
-    <script src='https://api.mapbox.com/mapbox.js/plugins/turf/v2.0.2/turf.min.js'></script>
+    
     <script>
-        const mapBoxAccessToken = `pk.eyJ1IjoicmVpc21hdGhldXM5NyIsImEiOiJjanV5eHhtNjkxMjJnM3lydmFqdjBodXB4In0.B97LD8MDr6PdY2LiEWvhEA`;
-        mapboxgl.accessToken = mapBoxAccessToken;
+
+        const mapBoxAccessToken = `pk.eyJ1IjoicmVpc21hdGhldXM5NyIsImEiOiJjanV5eHhtNjkxMjJnM3lydmFqdjBodXB4In0.B97LD8MDr6PdY2LiEWvhEA`
+        mapboxgl.accessToken = mapBoxAccessToken
+
+        // Mapbox Map instance
         var map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/outdoors-v11',
             center: [-43.17614100000003, -22.910430000000034],
             zoom: 14,
-        });
-
-        var geojson = {
-            "type": "FeatureCollection",
-            "features": []
-        };
+        })
 
         // Used to draw a line between points
         var linestring = {
@@ -366,48 +402,57 @@
                 "type": "LineString",
                 "coordinates": []
             }
-        };
+        }
 
+        // Add MapBox Geocoder element
         map.addControl(new MapboxGeocoder({
             accessToken: mapboxgl.accessToken,
             zoom: 17,
             placeholder: "Where?",
             reverseGeocode: true
-        }));
+        }))
 
-        map.addControl(new mapboxgl.NavigationControl());
+        // Add MapBox Navigation Controls element
+        map.addControl(new mapboxgl.NavigationControl())
 
+        // Add Geolocate element (needs user allowment)
         map.addControl(new mapboxgl.GeolocateControl({
             positionOptions: {
                 enableHighAccuracy: true
             },
             trackUserLocation: true
-        }));
+        }))
 
-        map.on('click', createMarker);
+        map.on('click', createMarker)
 
-        // Create an marker and add it to the map
+        // Create an marker and add it to the map.
+        // It fetches Mapbox Locations API 
         function createMarker(e) {
             let center = [e.lngLat.lng, e.lngLat.lat]
-
+            
+            // URL with latitute and longitude (latlng)
             const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/` +
                 `${center[0]},${center[1]}.json?access_token=${mapBoxAccessToken}`
-
+            
+            // the ViewModel instance 
             const viewModel = ko.dataFor(document.body)
+
             let address_name = "",
                 place = "",
                 country = ""
-
+            
+            // If not on directions mode, fetch Mapbox Locations API using jQuery's AJAX
             if (viewModel.markersMode()) {
                 $.get({
                     url,
                     context: document.body
                 }).done(function (result) {
-
+                    
+                    // If there are features, fill `address_name`, `place` and `country` values
                     if (result.features && result.features.length > 0) {
-                        console.log('mapbox result >>', result)
+                        
                         if (result.features[0].place_name) {
-                            address_name = result.features[0].place_name.split(",").splice(0, 1).join();
+                            address_name = result.features[0].place_name.split(",").splice(0, 1).join()
                         }
 
                         place = result.features.find(it => it.place_type == "place")
@@ -419,7 +464,7 @@
                         }
 
                         if (country) {
-                            let country_code = country.properties.short_code.toUpperCase();
+                            let country_code = country.properties.short_code.toUpperCase()
                             address_name += ", " + country_code
                             contry = country_code
                         }
@@ -429,97 +474,187 @@
                     }
 
                 }).fail(function (xhr, textStatus, errorThrown) {
-                    console.warn("Fail to fetch mapbox geocoding API. " + (errorThrown || ""));
+                    // Error handling
+                    console.warn("Fail to fetch mapbox geocoding API. " + (errorThrown || ""))
                     address_name = ""
-                }).always(function () {
-                    viewModel.addMarker({
-                        center,
-                        address_name,
-                    });
+                }).always(function () {    // Do always, regardless of success or error    
 
-                    let popup = new mapboxgl.Popup({
-                        offset: 1,
-                        anchor: 'top',
-                        closeOnClick: false
-                    })
-                        .setDOMContent(
-                            cardTemplate(
-                                address_name.split(",").splice(0, 1).join(),
-                                address_name.split(",").splice(1).join()
+                    // Only creates a popup if the address is specific enough
+                    // to perform a sense fetches on Foursquare API.
+                    let isSearchableAddress = address_name.split(",").length > 2
+                    if (isSearchableAddress) {
+                        // Creates Mapbox Popup instance
+                        var popup = new mapboxgl.Popup({
+                            offset: 1,
+                            anchor: 'top',
+                            closeOnClick: false
+                        })
+                            .setDOMContent( // Setting popup's custom element
+                                popupTemplate(
+                                    address_name
+                                )
                             )
-                        )
-                        .setLngLat(center);
+                            .setLngLat(center)
+                        
+                        // Add popup instance to the ViewModel
+                        viewModel.addPopups(popup)
+                    }
+                    
+                    // Setting marker's custom element
+                    // First, creates a container to the marker
                     let markerContainer = document.createElement('div');
-                    markerContainer.className = 'marker-container';
-                    let markerIcon = document.createElement('i');
-                    markerIcon.className = 'material-icons marker';
-                    markerIcon.textContent = 'place';
+                    markerContainer.className = 'marker-container'
+
+                    // Second, creates the marker element
+                    let markerIcon = document.createElement('i')
+
+                    // Customizing marker element
+                    markerIcon.className = 'material-icons marker'
+                    markerIcon.textContent = 'place'
                     markerIcon.onclick = function (e) {
-                        e.stopPropagation();
-                        popup.addTo(map)
-                        map.easeTo({ center });
+                        e.stopPropagation()
+                        if (isSearchableAddress) popup.addTo(map)
+                        viewModel.activeMarker({ center, address_name })
+                        map.easeTo({ center })
                     };
-                    markerContainer.appendChild(markerIcon);
 
-                    map.easeTo({ center });
+                    // Append marker to its container
+                    markerContainer.appendChild(markerIcon)
 
+                    // Aligns viewport and map centers slowly
+                    map.easeTo({ center })
+                    
+                    // Creates Mapbox Marker instance and appends it to its marker container
                     let marker = new mapboxgl.Marker(markerContainer)
                         .setLngLat(center)
                         .addTo(map)
 
+                    // Add marker instance to ViewModel
+                    viewModel.addMarker({
+                        center,
+                        address_name,
+                        markerMapBox: marker
+                    })
+
                 })
             } else {
+                // Aligns viewport and map centers normally
                 map.flyTo({ center });
             }
-
         }
         // End create marker
 
+        // It fetches the Foursquare API to retrieve information
+        // about nearby venues of a specific location.
         function fetchFoursquareAPI() {
 
+            // the ViewModel instance 
             const viewModel = ko.dataFor(document.body)
+
+            // Get the active marker's center
+            const center = viewModel.activeMarker().center
+            
+            // Foursquare URL with a longitude, latitude, client id and client secret
             const foursquareClientID = `EHBZPGPP5CFESEZAXKUORTOT5EMHUHKZPA1DRAXC3MYLFH2R`
             const foursquareClientSecret = `FFYFDZLLIYO2OKN3VUJZIQ0WM2GTQIPTZHXZAEDXSIWJFHE1`
-            let foursquareUrl = `https://api.foursquare.com/v2/venues/search?ll=
-                -22.910430000000034,-43.17614100000003&client_id=${foursquareClientID}
-                &client_secret=${foursquareClientSecret}&v=20190401&limit=10`
+            let foursquareUrl = `https://api.foursquare.com/v2/venues/search?ll=` +
+                `${center[1] + ',' + center[0]}&client_id=${foursquareClientID}` +
+                `&client_secret=${foursquareClientSecret}&v=20190401&limit=5&llAcc=1.0&radius=250`
 
+            // Fetches Fourquare API using jQuery's AJAX
             $.get({
                 url: foursquareUrl,
                 context: document.body
             }).done(function (result) {
-                debugger;
                 if (
-                    result.response && 
-                    result.response.venues && 
+                    result.response &&
+                    result.response.venues &&
                     result.response.venues.length > 0
                 ) {
-                    console.log("Foursquare API response >>", result)
-                    result.response.venues.map(
+                    // If there are venues, fill temporaryVenues array
+                    let temporaryVenues = result.response.venues.map(
                         it => {
                             let venue = {}
                             let address_name = ""
 
+                            // A venue always need to has name and center (longitude, latitude)
                             venue = {
                                 name: it.name,
                                 center: [it.location.lng, it.location.lat]
                             }
 
+                            // If there are a valid location and address,
+                            // fill `adress_name` values
                             if (it.location.address) {
-                                address_name = it.location.address + ", " + it.location.city + ", " + it.location.cc
+                                address_name = it.location.address
+                                if (it.location.city) { ", " + it.location.city }
+                                if (it.location.cc) { ", " + it.location.cc }
                                 venue = { ...venue, address_name }
+                                
+                                // Create Mapbox Popup instance
+                                var popup = new mapboxgl.Popup({
+                                    offset: 1,
+                                    anchor: 'top',
+                                    closeOnClick: false
+                                })
+                                    .setDOMContent( // Set custom popup element
+                                        popupTemplate(
+                                            venue.name + "," + venue.address_name,
+                                            true
+                                        )
+                                    )
+                                    .setLngLat(venue.center);
+                                
+                                // Add popup instance to the ViewModel
+                                viewModel.addPopups(popup)
+                                
+                                // Setting marker's custom element
+                                // First, creates a container to the marker
+                                let markerContainer = document.createElement('div');
+                                markerContainer.className = 'marker-container';
+
+                                // Second, creates the marker element
+                                let markerIcon = document.createElement('i');
+
+                                // Customizing venue marker element
+                                markerIcon.className = 'material-icons venue';
+                                markerIcon.textContent = 'place';
+                                markerIcon.onclick = function (e) {
+                                    e.stopPropagation();
+                                    popup.addTo(map)
+                                    map.easeTo({ center: venue.center });
+                                };
+
+                                // Append venue marker to its container
+                                markerContainer.appendChild(markerIcon);
+
+                                // Creates Mapbox Marker instance and appends it to its marker container
+                                let markerVenue = new mapboxgl.Marker(markerContainer)
+                                    .setLngLat(venue.center)
+                                    .addTo(map)
+                                
+                                venue = { ...venue, venueMarkerMapBox: markerVenue }
+
+                                // Add venue marker instance to the ViewModel
+                                viewModel.addVenueMarker(venue)
+
+                                return venue
                             }
-                            return venue
+
                         }
                     )
+
                 }
 
             }).fail(function (xhr, textStatus, errorThrown) {
+                // Error handling
                 console.warn("Fail to fetch Foursquare API. " + (errorThrown || ""));
-                // address_name = ""
             })
+
         }
 
+        // Transform a string into a HTML element.
+        // It uses HTML5' template feature.
         function htmlToElement(html) {
             let templateEl = document.createElement('template');
             html = html.trim();
@@ -527,31 +662,50 @@
             return templateEl.content.firstChild;
         }
 
-        function cardTemplate(title, subtitle) {
+        // Function to create a custom popup template using Material Design' card component
+        function popupTemplate(text, withoutActions) {
+            
+            let title = text.split(",").splice(0, 1).join()
+            let subtitle = text.split(",").splice(1).join()
+            let templateActions = ``
+
+            if (text.split(",").length > 2 && !withoutActions) {
+                templateActions = `
+                    <div class="mdc-card__actions">
+                        <div class="mdc-card__action-buttons">
+                        <button class="mdc-button mdc-card__action mdc-card__action--button" onclick="fetchFoursquareAPI(event)">
+                            <span class="mdc-button__label" style="width: max-content;">Find nearby venues</span>
+                            <img  class="mdc-button__icon" src="assets/foursquare-icon.svg" onerror="this.src=assets/foursquare.svg'"
+                                style="width: 30px; height: 30px"
+                            />
+                        </button>
+                        </div>
+                        <div class="mdc-card__action-icons">
+                            <button class="material-icons mdc-icon-button mdc-card__action mdc-card__action--icon" title="More options">more_vert</button>
+                        </div>
+                    </div>
+                `
+            }
+
             let template = `
             <div class="mdc-card">
                 <div class="mdc-card__primary-action mdc-card-title-custom">    
                     <span class="mdc-typography mdc-typography--subtitle1">${title}</span>
                     <span class="mdc-typography mdc-typography--subtitle2">${subtitle}</span>
-                </div>
-                <div class="mdc-card__actions">
-                    <div class="mdc-card__action-buttons">
-                    <button class="mdc-button mdc-card__action mdc-card__action--button" onclick="fetchFoursquareAPI()">
-                        <span class="mdc-button__label">Find nearby places</span>
-                        <i class="material-icons mdc-button__icon" aria-hidden="true">search</i>
-                    </button>
-                    </div>
-                    <div class="mdc-card__action-icons">
-                    <button class="material-icons mdc-icon-button mdc-card__action mdc-card__action--icon" title="More options">more_vert</button>
+                    <div id="ttt" style="display: none; height: 100px">
+                        <hr/>    
                     </div>
                 </div>
+                ${templateActions}
             </div>
             `
             template = htmlToElement(template)
             return template
         }
 
+        // It clears both points and route. (Element related with directions mode)
         function clearPointsAndRoute() {
+            // the ViewModel instance 
             const viewModel = ko.dataFor(document.body);
 
             if (viewModel.origin()) {
@@ -573,23 +727,35 @@
 
         }
 
+        // It fethces Mapbox Directrions API to discover directions between two points.
         function discoverDirections() {
 
+            // the ViewModel instance 
             const viewModel = ko.dataFor(document.body)
-            const A = viewModel.origin()
-            const B = viewModel.destination()
-            const profile = viewModel.travelProfile();
 
+            // Origin
+            const A = viewModel.origin()
+            // Destination
+            const B = viewModel.destination()
+            // Travel profile (one of: 'walking', 'cycling', 'driving')
+            const profile = viewModel.travelProfile();
+            
+            // URL to Mapbox Directions API with both origin and destination points (A and B, respectively)
             const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/${profile.toLowerCase()}/` +
                 `${A.x},${A.y};${B.x},${B.y}?` +
                 `overview=full&geometries=geojson&access_token=` + mapBoxAccessToken;
-
+            
+            // It uses jQuery's AJAX to perform GET request
             $.get({
                 url: directionsUrl
             })
                 .done(function (result) {
-                    console.log("result >>", result)
+                    // If there are routes between the given points
                     if (result.routes && result.routes.length > 0) {
+
+                        // It stores in route's data and creates a feature
+                        // using GeoJSON feature. This makes possible to draw
+                        // the route on the map.
                         let data = result.routes[0];
                         let route = data.geometry.coordinates;
                         let geojson = {
@@ -601,9 +767,12 @@
                             }
                         };
 
+                        // If already exists source 'route', just set new route
+                        // using the GeoJSON
                         if (map.getSource('route')) {
                             map.getSource('route').setData(geojson);
                         } else {
+                            // Else, creates the layer source named 'route'
                             map.addLayer({
                                 id: 'route',
                                 type: 'line',
@@ -623,20 +792,36 @@
                                     'line-cap': 'round'
                                 },
                                 paint: {
-                                    'line-color': '#6200ee',
-                                    'line-width': 5,
-                                    'line-opacity': 1
+                                    'line-color': '#6200ee',  // Route's color
+                                    'line-width': 5,  // Route's width
+                                    'line-opacity': 1  // Route's opacity
                                 }
                             })
+
+                            // Set source's data with GeoJSON
                             map.getSource('route').setData(geojson);
                         }
+                        
+                        // Toggle drawer's visibility
+                        if (drawer && !drawer.open) toggleDrawer()
 
                     }
-                })
-                .fail(function (xhr, textStatus, errorThrown) {
+                }).fail(function (xhr, textStatus, errorThrown) {
+                    // Error handling
                     console.warn("Fail to fetch mapbox directions API. " + (errorThrown || ""));
                 })
+        }
 
+        // It closes all popups
+        function closePopups() {
+            let viewModel = ko.dataFor(document.body)
+            viewModel.popups().map(it => it.remove())
+        }
+
+        // It closes all venue markers
+        function closeVenueMarkers() {
+            let viewModel = ko.dataFor(document.body)
+            viewModel.venues()
         }
 
 
