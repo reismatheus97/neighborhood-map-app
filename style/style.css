@@ -217,10 +217,16 @@ body {
 
 .mdc-card {
     max-width: 290px !important;
+    min-width: 250px !important;
     max-height: 230px !important;
     width: auto !important;
     height: auto !important;
     box-shadow: unset !important;
+    z-index: 250 !important;
+}
+
+.mdc-card__actions {
+    justify-content: center;
 }
 
 .mdc-snackbar__label { 
@@ -260,10 +266,6 @@ body {
     font-weight: 500 !important;
 }
 
-.mdc-card {
-    z-index: 250 !important;
-}
-
 .venue {
     font-size: 40px !important;
     color: #db1d1d;
@@ -298,4 +300,9 @@ body {
     margin: 12px !important;
     bottom: 110px;
     right: 50px;
+}
+
+.mapboxgl-popup-close-button {
+    right: 3px !important;
+    top: 3px !important;
 }

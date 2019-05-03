@@ -35,9 +35,7 @@
                     control-btn-margins-2
                     mapboxgl-ctrl 
                     mapboxgl-ctrl-group">
-        <button class="mdc-button width-100" onclick="confirmationdialog.open()"
-            title="Click to change your travel profile"
-        >Travel Options</button>
+        <button class="mdc-button width-100" onclick="confirmationdialog.open()" title="Click to change your travel profile">Travel Options</button>
     </section>
     <!-- end Travel options section -->
 
@@ -97,26 +95,30 @@
     <!-- end Radio buttons section -->
 
     <!-- FABs -->
-    <button class="mdc-fab open-drawer" onclick="toggleDrawer()">
-        <span title="Click to open drawer" class="mdc-fab__icon material-icons">swap_horiz</span>
-    </button>
-    <button class="mdc-fab fab-close-popups" onclick="closePopups()">
-        <span title="Click to close popups" class="mdc-fab__icon material-icons">delete_sweep</span>
-    </button>
-    <button class="mdc-fab fab-close-venue-markers" onclick="closeVenues()">
-        <span title="Click to close venue markers" class="mdc-fab__icon material-icons">location_off</span>
-    </button>
+    <section>
+        <button class="mdc-fab open-drawer" onclick="toggleDrawer()">
+            <span title="Click to open drawer" class="mdc-fab__icon material-icons">swap_horiz</span>
+        </button>
+    </section>
+    <section data-bind="if: hasAnyPopupOpen" >
+        <button class="mdc-fab fab-close-popups" onclick="closePopups()">
+            <span title="Click to close popups" class="mdc-fab__icon material-icons">delete_sweep</span>
+        </button>
+    </section>
+    <section data-bind="if: venueMarkers().length > 0">
+        <button class="mdc-fab fab-close-venue-markers" onclick="closeVenueMarkers()">
+            <span title="Click to close venue markers" class="mdc-fab__icon material-icons">location_off</span>
+        </button>
+    </section>
     <!-- end FABs -->
-    
+
     <!-- Drawer -->
     <aside class="mdc-drawer mdc-drawer--dismissible mdc-drawer--open">
         <div class="mdc-drawer__content">
             <nav class="mdc-list my-markers-container">
 
                 <div class="width-100">
-                    <button class="mdc-icon-button my-mdc-fab material-icons" onclick="toggleDrawer()"
-                        title="Click to close drawer"
-                    >
+                    <button class="mdc-icon-button my-mdc-fab material-icons" onclick="toggleDrawer()" title="Click to close drawer">
                         swap_horiz
                     </button>
                     <a class="mdc-list-item locations-title" href="javascript:" aria-selected="true">
@@ -367,6 +369,16 @@
         </div>
     </div>
     <!-- end directions SnackBar -->
+    <!-- invalidLocations SnackBar -->
+    <div id="invalidLocationSnack" class="mdc-snackbar mdc-snackbar--closing">
+            <div class="mdc-snackbar__surface">
+                <div class="mdc-snackbar__label" role="status" aria-live="polite">
+                    <div>Invalid location!</div>
+                </div>
+    
+            </div>
+        </div>
+    <!-- end invalidLocations SnackBar -->
     <!-- end MDCSnackbar -->
 
     <script src="./js/ViewModel.js"></script>
@@ -378,10 +390,11 @@
         const confirmationdialog = new mdc.dialog.MDCDialog(document.querySelector('#confirmationdialog'))
         const directionsSnackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('#directionsSnack'))
         const markersSnackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('#markersSnack'))
+        const invalidLocationSnackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('#invalidLocationSnack'))
         markersSnackBar.timeoutMs = 6000
 
     </script>
-    
+
     <script>
 
         const mapBoxAccessToken = `pk.eyJ1IjoicmVpc21hdGhldXM5NyIsImEiOiJjanV5eHhtNjkxMjJnM3lydmFqdjBodXB4In0.B97LD8MDr6PdY2LiEWvhEA`
@@ -429,28 +442,29 @@
         // It fetches Mapbox Locations API 
         function createMarker(e) {
             let center = [e.lngLat.lng, e.lngLat.lat]
-            
+
             // URL with latitute and longitude (latlng)
             const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/` +
                 `${center[0]},${center[1]}.json?access_token=${mapBoxAccessToken}`
-            
+
             // the ViewModel instance 
             const viewModel = ko.dataFor(document.body)
 
             let address_name = "",
                 place = "",
-                country = ""
-            
+                country = "",
+                isNoWhere = false
+
             // If not on directions mode, fetch Mapbox Locations API using jQuery's AJAX
             if (viewModel.markersMode()) {
                 $.get({
                     url,
                     context: document.body
                 }).done(function (result) {
-                    
+
                     // If there are features, fill `address_name`, `place` and `country` values
                     if (result.features && result.features.length > 0) {
-                        
+
                         if (result.features[0].place_name) {
                             address_name = result.features[0].place_name.split(",").splice(0, 1).join()
                         }
@@ -471,6 +485,7 @@
 
                     } else {
                         address_name = "No where!"
+                        isNoWhere = true
                     }
 
                 }).fail(function (xhr, textStatus, errorThrown) {
@@ -478,64 +493,68 @@
                     console.warn("Fail to fetch mapbox geocoding API. " + (errorThrown || ""))
                     address_name = ""
                 }).always(function () {    // Do always, regardless of success or error    
-
-                    // Only creates a popup if the address is specific enough
-                    // to perform a sense fetches on Foursquare API.
-                    let isSearchableAddress = address_name.split(",").length > 2
-                    if (isSearchableAddress) {
-                        // Creates Mapbox Popup instance
-                        var popup = new mapboxgl.Popup({
-                            offset: 1,
-                            anchor: 'top',
-                            closeOnClick: false
-                        })
-                            .setDOMContent( // Setting popup's custom element
-                                popupTemplate(
-                                    address_name
+                    
+                    if (!isNoWhere) {        
+                        // Only creates a popup if the address is specific enough
+                        // to perform a sense fetches on Foursquare API.
+                        let isSearchableAddress = address_name.split(",").length > 2
+                        if (isSearchableAddress) {
+                            // Creates Mapbox Popup instance
+                            var popup = new mapboxgl.Popup({
+                                offset: 1,
+                                anchor: 'top',
+                                closeOnClick: false
+                            })
+                                .setDOMContent( // Setting popup's custom element
+                                    popupTemplate(
+                                        address_name
+                                    )
                                 )
-                            )
+                                .setLngLat(center)
+
+                            // Add popup instance to the ViewModel
+                            viewModel.addPopups(popup)
+                        }
+
+                        // Setting marker's custom element
+                        // First, creates a container to the marker
+                        let markerContainer = document.createElement('div');
+                        markerContainer.className = 'marker-container'
+
+                        // Second, creates the marker element
+                        let markerIcon = document.createElement('i')
+
+                        // Customizing marker element
+                        markerIcon.className = 'material-icons marker'
+                        markerIcon.textContent = 'place'
+                        markerIcon.onclick = function (e) {
+                            e.stopPropagation()
+                            if (isSearchableAddress) popup.addTo(map)
+                            viewModel.activeMarker({ center, address_name })
+                            map.easeTo({ center })
+                        };
+
+                        // Append marker to its container
+                        markerContainer.appendChild(markerIcon)
+
+                        // Aligns viewport and map centers slowly
+                        map.easeTo({ center })
+
+                        // Creates Mapbox Marker instance and appends it to its marker container
+                        let marker = new mapboxgl.Marker(markerContainer)
                             .setLngLat(center)
-                        
-                        // Add popup instance to the ViewModel
-                        viewModel.addPopups(popup)
+                            .addTo(map)
+
+                        // Add marker instance to ViewModel
+                        viewModel.addMarker({
+                            center,
+                            address_name,
+                            markerMapBox: marker
+                        })
+                    } else {
+                        invalidLocationSnackBar.open()
                     }
                     
-                    // Setting marker's custom element
-                    // First, creates a container to the marker
-                    let markerContainer = document.createElement('div');
-                    markerContainer.className = 'marker-container'
-
-                    // Second, creates the marker element
-                    let markerIcon = document.createElement('i')
-
-                    // Customizing marker element
-                    markerIcon.className = 'material-icons marker'
-                    markerIcon.textContent = 'place'
-                    markerIcon.onclick = function (e) {
-                        e.stopPropagation()
-                        if (isSearchableAddress) popup.addTo(map)
-                        viewModel.activeMarker({ center, address_name })
-                        map.easeTo({ center })
-                    };
-
-                    // Append marker to its container
-                    markerContainer.appendChild(markerIcon)
-
-                    // Aligns viewport and map centers slowly
-                    map.easeTo({ center })
-                    
-                    // Creates Mapbox Marker instance and appends it to its marker container
-                    let marker = new mapboxgl.Marker(markerContainer)
-                        .setLngLat(center)
-                        .addTo(map)
-
-                    // Add marker instance to ViewModel
-                    viewModel.addMarker({
-                        center,
-                        address_name,
-                        markerMapBox: marker
-                    })
-
                 })
             } else {
                 // Aligns viewport and map centers normally
@@ -553,13 +572,13 @@
 
             // Get the active marker's center
             const center = viewModel.activeMarker().center
-            
+
             // Foursquare URL with a longitude, latitude, client id and client secret
             const foursquareClientID = `EHBZPGPP5CFESEZAXKUORTOT5EMHUHKZPA1DRAXC3MYLFH2R`
             const foursquareClientSecret = `FFYFDZLLIYO2OKN3VUJZIQ0WM2GTQIPTZHXZAEDXSIWJFHE1`
             let foursquareUrl = `https://api.foursquare.com/v2/venues/search?ll=` +
                 `${center[1] + ',' + center[0]}&client_id=${foursquareClientID}` +
-                `&client_secret=${foursquareClientSecret}&v=20190401&limit=5&llAcc=1.0&radius=250`
+                `&client_secret=${foursquareClientSecret}&v=20190401&limit=9&llAcc=1.0&radius=250`
 
             // Fetches Fourquare API using jQuery's AJAX
             $.get({
@@ -590,7 +609,7 @@
                                 if (it.location.city) { ", " + it.location.city }
                                 if (it.location.cc) { ", " + it.location.cc }
                                 venue = { ...venue, address_name }
-                                
+
                                 // Create Mapbox Popup instance
                                 var popup = new mapboxgl.Popup({
                                     offset: 1,
@@ -604,10 +623,10 @@
                                         )
                                     )
                                     .setLngLat(venue.center);
-                                
+
                                 // Add popup instance to the ViewModel
                                 viewModel.addPopups(popup)
-                                
+
                                 // Setting marker's custom element
                                 // First, creates a container to the marker
                                 let markerContainer = document.createElement('div');
@@ -632,7 +651,7 @@
                                 let markerVenue = new mapboxgl.Marker(markerContainer)
                                     .setLngLat(venue.center)
                                     .addTo(map)
-                                
+
                                 venue = { ...venue, venueMarkerMapBox: markerVenue }
 
                                 // Add venue marker instance to the ViewModel
@@ -664,7 +683,7 @@
 
         // Function to create a custom popup template using Material Design' card component
         function popupTemplate(text, withoutActions) {
-            
+
             let title = text.split(",").splice(0, 1).join()
             let subtitle = text.split(",").splice(1).join()
             let templateActions = ``
@@ -675,13 +694,10 @@
                         <div class="mdc-card__action-buttons">
                         <button class="mdc-button mdc-card__action mdc-card__action--button" onclick="fetchFoursquareAPI(event)">
                             <span class="mdc-button__label" style="width: max-content;">Find nearby venues</span>
-                            <img  class="mdc-button__icon" src="assets/foursquare-icon.svg" onerror="this.src=assets/foursquare.svg'"
-                                style="width: 30px; height: 30px"
+                            <img class="mdc-button__icon" src="assets/foursquare-icon.svg" onerror="this.src=assets/foursquare.svg'"
+                                style="width: 25px; height: 25px"
                             />
                         </button>
-                        </div>
-                        <div class="mdc-card__action-icons">
-                            <button class="material-icons mdc-icon-button mdc-card__action mdc-card__action--icon" title="More options">more_vert</button>
                         </div>
                     </div>
                 `
@@ -739,12 +755,12 @@
             const B = viewModel.destination()
             // Travel profile (one of: 'walking', 'cycling', 'driving')
             const profile = viewModel.travelProfile();
-            
+
             // URL to Mapbox Directions API with both origin and destination points (A and B, respectively)
             const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/${profile.toLowerCase()}/` +
                 `${A.x},${A.y};${B.x},${B.y}?` +
                 `overview=full&geometries=geojson&access_token=` + mapBoxAccessToken;
-            
+
             // It uses jQuery's AJAX to perform GET request
             $.get({
                 url: directionsUrl
@@ -801,7 +817,7 @@
                             // Set source's data with GeoJSON
                             map.getSource('route').setData(geojson);
                         }
-                        
+
                         // Toggle drawer's visibility
                         if (drawer && !drawer.open) toggleDrawer()
 
@@ -815,13 +831,14 @@
         // It closes all popups
         function closePopups() {
             let viewModel = ko.dataFor(document.body)
-            viewModel.popups().map(it => it.remove())
+            viewModel.removePopups()
         }
 
         // It closes all venue markers
         function closeVenueMarkers() {
             let viewModel = ko.dataFor(document.body)
-            viewModel.venues()
+            viewModel.removeVenueMarkers()
+            console.log(123)
         }
 
 
