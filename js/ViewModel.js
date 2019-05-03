@@ -1,34 +1,22 @@
 var MapViewModel = function () {
-    var self = this;
-    self.numberOfMarkers = ko.observable(0);
-    self.markers = ko.observableArray();
-    self.filterQuery = ko.observable();
-    self.filteredElements = ko.observableArray();
-    self.venueMarkers = ko.observableArray();
-    self.activeMarker = ko.observable();
-    self.markersMode = ko.observable(true);
-    self.directions = ko.observableArray();
-    self.origin = ko.observable();
-    self.destination = ko.observable();
-    self.travelProfile = ko.observable("driving");
-    self.isDrawerOpen = ko.observable(true);
-    self.popups = ko.observableArray();
-
-    self.addDirections = function (coordinate) {
-        if (self.directions().length > 1) {
-            alert("removing all directions...");
-            self.directions.removeAll();
-        } else {
-            self.directions.push(coordinate);
-        }
-        
-    }
+    var self = this
+    self.numberOfMarkers = ko.observable(0)
+    self.markers = ko.observableArray()
+    self.filterQuery = ko.observable()
+    self.filteredElements = ko.observableArray()
+    self.venueMarkers = ko.observableArray()
+    self.activeMarker = ko.observable()
+    self.markersMode = ko.observable(true)
+    self.origin = ko.observable()
+    self.destination = ko.observable()
+    self.travelProfile = ko.observable("driving")
+    self.isDrawerOpen = ko.observable(true)
+    self.popups = ko.observableArray()
 
     self.hasFilter = ko.computed(function() {
         let nonFilteredMarkers = []
         let filteredMarkers = []
         if (self.filterQuery()) {
-            
             const filterQuery = self.filterQuery().toLowerCase();
             if (self.markers() && self.markers().length > 0) {
                 const markers = self.markers();  
@@ -48,12 +36,33 @@ var MapViewModel = function () {
         return !!self.filterQuery();
     }, self);
 
+    self.hasAnyPopupOpen = ko.computed(function () {
+        return !!self.popups().find(it => it.isOpen())
+    }, self);
+
+    self.popups.subscribe(function(changes) {
+
+        // For this example, we'll just print out the change info
+        console.log(changes);
+    
+    }, null, "arrayChange");
+
     self.addVenueMarker = function (venueMarker) {
         self.venueMarkers.push(venueMarker);
     }
 
+    self.removeVenueMarkers = function () {
+        self.venueMarkers().map(it => it.venueMarkerMapBox.remove())
+        self.venueMarkers.removeAll();
+    }
+
     self.addPopups = function (popup) {
         self.popups.push(popup);
+    }
+
+    self.removePopups = function () {
+        self.popups().map(it => it.remove())
+        self.popups().removeAll()
     }
 
     self.addMarker = function (marker) {
