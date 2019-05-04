@@ -23,7 +23,7 @@ var linestring = {
 map.addControl(new MapboxGeocoder({
     accessToken: mapboxgl.accessToken,
     zoom: 17,
-    placeholder: "Where?",
+    placeholder: "Search around the world",
     reverseGeocode: true
 }))
 
@@ -45,7 +45,7 @@ let fiveLocationsPoints = [
     [-43.168741590995694, -22.964041378464472],
     [-40.50890807387938, -2.804778353498193],
     [-41.88850087705029, -22.770348294367736],
-    [-41.91620561477029, -22.782458533717488]
+    [-41.90974685546715, -22.778699601373205]
 ]
 
 // It includes 5 default locations on the map
