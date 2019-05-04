@@ -107,6 +107,7 @@ function createMarker(e) {
         }).fail(function (xhr, textStatus, errorThrown) {
             // Error handling
             console.warn("Fail to fetch mapbox geocoding API. " + (errorThrown || ""))
+            alert("Fail to fetch mapbox API!")
             address_name = ""
         }).always(function () {    // Do always, regardless of success or error    
 
@@ -475,6 +476,5 @@ function closePopups() {
 function closeVenueMarkers() {
     let viewModel = ko.dataFor(document.body)
     viewModel.removeVenueMarkers()
-    console.log(123)
 }
 
