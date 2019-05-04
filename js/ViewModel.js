@@ -12,6 +12,7 @@ var MapViewModel = function () {
     self.travelProfile = ko.observable("driving")
     self.isDrawerOpen = ko.observable(true)
     self.popups = ko.observableArray()
+    self.numberOfPopupsOpen = ko.observable(0)
 
     self.hasFilter = ko.computed(function() {
         let nonFilteredMarkers = []
@@ -37,15 +38,8 @@ var MapViewModel = function () {
     }, self);
 
     self.hasAnyPopupOpen = ko.computed(function () {
-        return !!self.popups().find(it => it.isOpen())
+        return !!self.numberOfPopupsOpen()
     }, self);
-
-    self.popups.subscribe(function(changes) {
-
-        // For this example, we'll just print out the change info
-        console.log(changes);
-    
-    }, null, "arrayChange");
 
     self.addVenueMarker = function (venueMarker) {
         self.venueMarkers.push(venueMarker);
@@ -58,11 +52,17 @@ var MapViewModel = function () {
 
     self.addPopups = function (popup) {
         self.popups.push(popup);
+        self.numberOfPopupsOpen(self.numberOfPopupsOpen() + 1);
+    }
+
+    self.closePopup = function () {
+        self.numberOfPopupsOpen(self.numberOfPopupsOpen() - 1);
     }
 
     self.removePopups = function () {
         self.popups().map(it => it.remove())
-        self.popups().removeAll()
+        self.popups.removeAll()
+        self.numberOfPopupsOpen(0);
     }
 
     self.addMarker = function (marker) {
